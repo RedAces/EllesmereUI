@@ -5322,3 +5322,13 @@ L["~%dx  Myth Crest"]  = "~%dx  Wappen des Mythos"
 L["~%dx  Myth Crest\r\n|cff888888Scan at Upgrader for exact costs|r"] = "~%dx  Wappen des Mythos\r\n|cff888888Beim Aufwerter scannen für exakte Kosten|r"
 L["~%dx  Veteran Crest"]  = "~%dx  Wappen des Veterans"
 L["~%dx  Veteran Crest\r\n|cff888888Scan at Upgrader for exact costs|r"] = "~%dx  Wappen des Veterans\r\n|cff888888Beim Aufwerter scannen für exakte Kosten|r"
+
+-- QoL: Raid Tools -- per-button switches and the 0-second pull slots
+L["GROUP BUTTONS"] = "GRUPPENSCHALTFLÄCHEN"
+L["Show Role Check"] = "Rollenüberprüfung anzeigen"
+L["Shows the Role Check button. Turn it off and the remaining buttons close the gap."] = "Zeigt die Schaltfläche 'Rollenüberprüfung'. Ist sie ausgeschaltet, rücken die übrigen Schaltflächen nach."
+L["Show Convert to Raid"] = "'In Schlachtzug umwandeln' anzeigen"
+L["Shows the Convert to Raid button, which reads Convert to Party while you are in a raid."] = "Zeigt die Schaltfläche 'In Schlachtzug umwandeln', die im Schlachtzug 'In Gruppe umwandeln' heißt."
+L["Show Disband"] = "'Auflösen' anzeigen"
+L["Shows the Disband button. It always asks before disbanding, but hiding it puts it out of misclick range for good."] = "Zeigt die Schaltfläche 'Auflösen'. Sie fragt immer nach, bevor die Gruppe aufgelöst wird -- ausgeblendet ist sie jedoch endgültig außer Reichweite von Fehlklicks."
+L["Countdown length of this pull button, in seconds. Set it to 0 to hide the button; with all three at 0 the whole pull row disappears, Stop included."] = "Countdown-Dauer dieser Pull-Schaltfläche in Sekunden. Auf 0 gesetzt wird die Schaltfläche ausgeblendet; stehen alle drei auf 0, verschwindet die gesamte Pull-Zeile samt 'Stopp'."
