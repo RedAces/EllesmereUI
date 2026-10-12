@@ -4686,6 +4686,11 @@ local function CreateDMWindow(winIdx)
 
     end
 
+    -- Breakdown scratch: the refresh tick re-reads every spell while the breakdown is
+    -- open, so the amount reader and the amounts array are made once and reused.
+    local function ReadSpellAmount(spell) return spell.totalAmount end
+    local _bdAmounts = {}
+
     function W.RefreshBreakdown()
         if not W.sourceOpen then return end
         if not W.sourceGUID and not W.sourceCreatureID then return end
@@ -4889,19 +4894,24 @@ local function CreateDMWindow(winIdx)
         end
         local spells = srcData.combatSpells; local c = DB(); local barH, barSp, stride = ns._RowMetrics(c.barHeight or 18, c.barSpacing or 2, frame:GetEffectiveScale())
         local leftFS = c.leftFontSize or c.fontSize or 11; local rightFS = c.rightFontSize or c.fontSize or 11; local texPath, texKey = GetBarTexturePath()
-        local sorted = {}
-        for _, spell in ipairs(spells) do local ok, amt = pcall(function() return spell.totalAmount end); sorted[#sorted + 1] = { spell = spell, amount = (ok and amt) or 0 } end
-        -- API returns combatSpells pre-sorted; no table.sort needed
-        local maxAmt = sorted[1] and sorted[1].amount or 1
+        -- API returns combatSpells pre-sorted; no table.sort needed. amounts[i] belongs to spells[i].
+        local amounts, nSpells = _bdAmounts, 0
+        for _, spell in ipairs(spells) do
+            local ok, amt = pcall(ReadSpellAmount, spell)
+            nSpells = nSpells + 1
+            amounts[nSpells] = (ok and amt) or 0
+        end
+        for i = #amounts, nSpells + 1, -1 do amounts[i] = nil end
+        local maxAmt = amounts[1] or 1
         -- Sum totals for percentage (skip if amounts are secret)
         local totalDmg = 0
         local canPercent = maxAmt and (not issecretvalue or not issecretvalue(maxAmt)) and type(maxAmt) == "number"
-        if canPercent then for _, e in ipairs(sorted) do totalDmg = totalDmg + e.amount end end
-        local spCount = math.min(#sorted, BAR_POOL_SIZE)
+        if canPercent then for i = 1, nSpells do totalDmg = totalDmg + amounts[i] end end
+        local spCount = math.min(nSpells, BAR_POOL_SIZE)
         for i = 1, BAR_POOL_SIZE do
             local bar = W.spellPool[i]
             if i <= spCount then
-                local entry = sorted[i]; local spell = entry.spell; bar.row:Show()
+                local amount = amounts[i]; local spell = spells[i]; bar.row:Show()
                 bar.row:ClearAllPoints()
                 local yOff2 = -((i-1) * stride)
                 bar.row:SetPoint("TOPLEFT", W.srcContent, "TOPLEFT", 0, yOff2)
@@ -4928,7 +4938,7 @@ local function CreateDMWindow(winIdx)
                 else bar.classIcon:Hide() end
                 bar.fill:ClearAllPoints(); bar.fill:SetPoint("TOPLEFT", bar.row, "TOPLEFT", iconOffset, 0)
                 bar.fill:SetPoint("TOPRIGHT", bar.row, "TOPRIGHT", 0, 0); bar.fill:SetHeight(barH)
-                ApplyBarTexture(bar.fill, texPath, texKey); bar.fill:SetMinMaxValues(0, maxAmt); bar.fill:SetValue(entry.amount)
+                ApplyBarTexture(bar.fill, texPath, texKey); bar.fill:SetMinMaxValues(0, maxAmt); bar.fill:SetValue(amount)
                 if W.sourceClass and RAID_CLASS_COLORS[W.sourceClass] then
                     local cc = EUI.GetClassColor(W.sourceClass); bar.fill:SetStatusBarColor(cc.r, cc.g, cc.b)
                 else local ar2, ag2, ab2 = GetAccentRGB(); bar.fill:SetStatusBarColor(ar2, ag2, ab2) end
@@ -4937,9 +4947,9 @@ local function CreateDMWindow(winIdx)
                 if spell.spellID then local okS, sn = pcall(function() return C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spell.spellID) end); spellName = (okS and sn) or nil end
                 bar.label:SetText(spellName or spell.creatureName or "Unknown")
                 if canPercent and totalDmg > 0 then
-                    bar.amount:SetText(format("%s  %.1f%%", AbbrevNumber(entry.amount), (entry.amount / totalDmg) * 100))
+                    bar.amount:SetText(format("%s  %.1f%%", AbbrevNumber(amount), (amount / totalDmg) * 100))
                 else
-                    bar.amount:SetText(AbbrevNumber(entry.amount))
+                    bar.amount:SetText(AbbrevNumber(amount))
                 end
                 bar._spellID = spell.spellID
             else bar.row:Hide(); bar._spellID = nil end
